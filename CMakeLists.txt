@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.20)
+project(shStudio10 CXX)
+
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
+  message(FATAL_ERROR "Configure for Win32: cmake -A Win32 ..")
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+file(GLOB_RECURSE SHSTUDIO_SOURCES CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE SHSTUDIO_HEADERS CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/src/*.h ${CMAKE_SOURCE_DIR}/src/*.hpp)
+set(SHSTUDIO_PART_DIRS "")
+foreach(h IN LISTS SHSTUDIO_HEADERS)
+  get_filename_component(d "${h}" DIRECTORY)
+  list(APPEND SHSTUDIO_PART_DIRS "${d}")
+endforeach()
+list(REMOVE_DUPLICATES SHSTUDIO_PART_DIRS)
+set(SHSTUDIO_MAIN ${CMAKE_SOURCE_DIR}/src/app/winmain.cpp)
+list(REMOVE_ITEM SHSTUDIO_SOURCES ${SHSTUDIO_MAIN})
+source_group(TREE ${CMAKE_SOURCE_DIR}/src PREFIX src FILES ${SHSTUDIO_SOURCES} ${SHSTUDIO_HEADERS} ${SHSTUDIO_MAIN})
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT shStudio)
+
+set(SHSTUDIO_DEFS UNICODE _UNICODE WIN32 _WINDOWS _CRT_SECURE_NO_WARNINGS NOMINMAX)
+set(SHSTUDIO_OPTS /W3 /we4150 /EHsc /MP /utf-8 /arch:SSE2 /fp:precise)
+set(SHSTUDIO_LIBS kernel32 user32 gdi32 comdlg32 advapi32 shell32 ole32 odbc32 shlwapi comctl32
+  gdiplus version opengl32 glu32 msimg32 uxtheme)
+
+add_library(shcore OBJECT ${SHSTUDIO_SOURCES} ${SHSTUDIO_HEADERS})
+target_include_directories(shcore PUBLIC ${SHSTUDIO_PART_DIRS})
+target_compile_definitions(shcore PUBLIC ${SHSTUDIO_DEFS})
+target_compile_options(shcore PUBLIC ${SHSTUDIO_OPTS})
+
+add_executable(shStudio WIN32 ${SHSTUDIO_MAIN} $<TARGET_OBJECTS:shcore>)
+target_include_directories(shStudio PRIVATE ${SHSTUDIO_PART_DIRS})
+target_compile_definitions(shStudio PRIVATE ${SHSTUDIO_DEFS})
+target_compile_options(shStudio PRIVATE ${SHSTUDIO_OPTS})
+set_target_properties(shStudio PROPERTIES OUTPUT_NAME "shStudio 10")
+target_link_options(shStudio PRIVATE "${CMAKE_SOURCE_DIR}/res/shstudio.res" /MANIFEST:NO /SAFESEH:NO)
+target_link_libraries(shStudio PRIVATE ${SHSTUDIO_LIBS})

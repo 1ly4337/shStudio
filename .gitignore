@@ -1,0 +1,12 @@
+out/
+build/
+bin/
+.vs/
+*.log
+*.pdb
+*.ilk
+*.obj
+*.exe
+*.i64
+*.idb
+__pycache__/
